@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Cores claras (para o tema escuro que será o padrão) */
+    --background: 240 27% 14%; /* #1a1a2e */
+    --foreground: 0 0% 98%;
+
+    --card: 240 30% 18%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 30% 18%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 240 27% 14%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 225 48% 16%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 30% 20%;
+    --muted-foreground: 240 5% 75%;
+
+    --accent: 0 0% 100%;
+    --accent-foreground: 240 27% 14%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 30% 22%;
+    --input: 240 30% 22%;
+    --ring: 240 5% 64.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .light {
+    --background: 240 27% 14%; /* Mantendo o tema escuro como padrão */
+    --foreground: 0 0% 98%;
+
+    --card: 240 30% 18%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 30% 18%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 240 27% 14%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 225 48% 16%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 30% 20%;
+    --muted-foreground: 240 5% 75%;
+
+    --accent: 0 0% 100%;
+    --accent-foreground: 240 27% 14%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 30% 22%;
+    --input: 240 30% 22%;
+    --ring: 240 5% 64.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Estilos personalizados para a nova paleta de cores */
+.bg-cathedral-gradient {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.bg-cathedral-dark {
+  background-color: #1a1a2e;
+}
+
+.bg-cathedral-darker {
+  background-color: #13132a;
+}
+
+.bg-cathedral-card {
+  background-color: #222244;
+}
+
+.text-cathedral-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #e6e6e6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.border-cathedral {
+  border-color: rgba(255, 255, 255, 0.2);
+}
