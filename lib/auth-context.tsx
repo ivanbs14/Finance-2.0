@@ -2,6 +2,18 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { users, type User } from "@/lib/data"
+import api from "@/services/apiService"
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+
+interface DecodedToken {
+  userId: string
+  email: string
+  role: string
+  churchId?: string
+  iat: number
+  exp: number
+}
 
 // Remover a senha do tipo User para o usuário autenticado
 type AuthenticatedUser = Omit<User, "password">
@@ -19,9 +31,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthenticatedUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Verificar se há um usuário salvo no localStorage ao carregar a página
   useEffect(() => {
     const storedUser = localStorage.getItem("user")
+    console.log(storedUser)
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser))
@@ -33,30 +45,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  // Função de login simulada
   const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true)
+  try {
+    setIsLoading(true);
+    console.log("Tentando fazer login com:", email, password);
+    
+    const response = await api.post("/auth", {
+      email,
+      password,
+    });
 
-    // Simular um atraso de rede
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    const { token } = response.data;
+    if (token) {
+      Cookies.set("token", token, { expires: 1 });
 
-    // Verificar credenciais
-    const foundUser = users.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password)
+      const decoded = jwtDecode<DecodedToken>(token);
+      const userWithoutPassword = {
+        id: decoded.userId,
+        email: decoded.email,
+        role: decoded.role,
+        churchId: decoded.churchId,
+      };
 
-    if (foundUser) {
-      // Criar uma versão do usuário sem a senha
-      const { password: _, ...userWithoutPassword } = foundUser
-
-      // Salvar no estado e no localStorage
-      setUser(userWithoutPassword)
-      localStorage.setItem("user", JSON.stringify(userWithoutPassword))
-      setIsLoading(false)
-      return true
+      setUser(userWithoutPassword);
+      localStorage.setItem("user", JSON.stringify(userWithoutPassword));
+      setIsLoading(false);
+      return true;
     }
 
-    setIsLoading(false)
-    return false
+    return false;
+  } catch (error) {
+    console.error("Erro ao fazer login:", error);
+    setIsLoading(false);
+    return false;
+  } finally {
+    setIsLoading(false);
   }
+};
 
   // Função de logout
   const logout = () => {

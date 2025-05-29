@@ -102,10 +102,6 @@ export function DashboardContent({ pastorName, churchName }: DashboardContentPro
                 <span>{churchName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-medium">Shepherd:</span>
-                <span>{pastorName}</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="font-medium">Address:</span>
                 <span>Rua Exemplo, 123</span>
               </div>

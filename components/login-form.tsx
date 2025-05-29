@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/components/ui/use-toast"
 import { AlertCircle } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import Cookies from "js-cookie";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -42,9 +43,9 @@ export function LoginForm() {
     setError(null)
 
     try {
-      const success = await login(data.email, data.password)
-
-      if (!success) {
+      const token = await login(data.email, data.password)
+      console.log("Token received:", token)
+      if (!token) {
         setError("Credenciais inválidas. Tente novamente.")
         toast({
           variant: "destructive",
@@ -54,6 +55,7 @@ export function LoginForm() {
         return
       }
 
+      Cookies.set("token", String(token), { expires: 1 })
       toast({
         title: "Login bem-sucedido",
         description: "Redirecionando para o dashboard...",
@@ -69,7 +71,7 @@ export function LoginForm() {
         description: "Ocorreu um erro inesperado. Tente novamente mais tarde.",
       })
     }
-  }
+  };
 
   return (
     <Card className="border-gray-600 bg-cathedral-card">
@@ -117,9 +119,9 @@ export function LoginForm() {
           <p className="font-medium mb-1">Credenciais de teste:</p>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <p className="font-medium text-xs">Shepherd:</p>
-              <p className="text-xs">shepherd@igreja.com</p>
-              <p className="text-xs">igreja123</p>
+              <p className="font-medium text-xs">ADM:</p>
+              <p className="text-xs">ivan@email.com</p>
+              <p className="text-xs">123abc</p>
             </div>
             <div>
               <p className="font-medium text-xs">Tesoureiro:</p>
