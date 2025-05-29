@@ -16,8 +16,9 @@ const recordSchema = z.object({
   countedBy: z.string().min(1, { message: "Nome de quem contou é obrigatório" }),
   name: z.string().min(1, { message: "Nome é obrigatório" }),
   amount: z.coerce.number().positive({ message: "Valor deve ser positivo" }),
-  category: z.enum(["Tithe", "Offering", "Donation", "Other"]),
+  category: z.enum(["Tithes", "Offering", "Donations", "Other"]),
   paymentMethod: z.enum(["Cash", "Check", "Card", "Transfer", "Other"]),
+  createdAt: z.string().optional(),
 })
 
 type RecordFormValues = z.infer<typeof recordSchema>
@@ -45,6 +46,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, defaultValues }: Edit
       amount: 0,
       category: "Offering",
       paymentMethod: "Cash",
+      createdAt: new Date().toISOString(),
     },
   })
 
@@ -56,11 +58,13 @@ export function EditRecordModal({ isOpen, onClose, onSave, defaultValues }: Edit
       setValue("amount", defaultValues.amount)
       setValue("category", defaultValues.category)
       setValue("paymentMethod", defaultValues.paymentMethod)
+      setValue("createdAt", defaultValues.createdAt ? new Date(defaultValues.createdAt).toISOString() : new Date().toISOString())
     }
   }, [defaultValues, setValue])
 
   const onSubmit = (data: RecordFormValues) => {
     onSave(data)
+    console.log("Record updated:", { ...data, id: defaultValues?.id })
     reset()
   }
 
@@ -114,9 +118,9 @@ export function EditRecordModal({ isOpen, onClose, onSave, defaultValues }: Edit
                   <SelectValue placeholder="Selection category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Tithe">Tithe</SelectItem>
+                  <SelectItem value="Tithes">Tithe</SelectItem>
                   <SelectItem value="Offering">Offering</SelectItem>
-                  <SelectItem value="Donation">Donation</SelectItem>
+                  <SelectItem value="Donations">Donation</SelectItem>
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>

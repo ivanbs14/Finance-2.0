@@ -2,7 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
 export type PaymentMethod = "Cash" | "Check" | "Card" | "Transfer" | "Other"
-export type Category = "Tithe" | "Offering" | "Donation" | "Other"
+export type Category = "Tithes" | "Offering" | "Donations" | "Other"
 export type Currency = "BRL" | "USD" | "EUR" | "GBP" | "Other"
 
 export interface Record {
@@ -13,7 +13,7 @@ export interface Record {
   amount: number
   category: Category
   paymentMethod: PaymentMethod
-  date: string
+  createdAt?: Date
 }
 
 export interface Expense {
@@ -41,7 +41,7 @@ const sampleRecords: Record[] = [
     countedBy: "Maria Oliveira",
     name: "João da Silva",
     amount: 150.0,
-    category: "Tithe",
+    category: "Tithes",
     paymentMethod: "Cash",
     date: new Date(2025, 5, 15).toISOString(),
   },
@@ -81,7 +81,7 @@ const sampleRecords: Record[] = [
     countedBy: "Maria Oliveira",
     name: "Roberto Alves",
     amount: 100.0,
-    category: "Tithe",
+    category: "Tithes",
     paymentMethod: "Cash",
     date: new Date(2025, 5, 29).toISOString(),
   },

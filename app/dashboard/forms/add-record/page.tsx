@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -15,23 +15,32 @@ import { RecordsList } from "@/components/records-list"
 import { EditRecordModal } from "@/components/edit-record-modal"
 import { DashboardHeader } from "@/components/dashboard-header"
 import type { Category, PaymentMethod } from "@/lib/data"
+import { useAuth } from "@/lib/auth-context"
+import api from "@/services/apiService"
+import Cookies from "js-cookie";
+import { Record } from "@/lib/store"
+import { set } from "date-fns"
 
 const recordSchema = z.object({
   serviceDescription: z.string().min(1, { message: "Descrição do serviço é obrigatória" }),
   countedBy: z.string().min(1, { message: "Nome de quem contou é obrigatório" }),
   name: z.string().min(1, { message: "Nome é obrigatório" }),
   amount: z.coerce.number().positive({ message: "Valor deve ser positivo" }),
-  category: z.enum(["Tithe", "Offering", "Donation", "Other"]),
+  category: z.enum(["Tithes", "Offering", "Donations", "Other"]),
   paymentMethod: z.enum(["Cash", "Check", "Card", "Transfer", "Other"]),
+  createdAt: z.string().optional(),
 })
 
 type RecordFormValues = z.infer<typeof recordSchema>
 
 export default function AddRecordPage() {
+  const { user } = useAuth()
+  const token = Cookies.get('token');
   const { records, addRecord, updateRecord, deleteRecord } = useStore()
   const [isEditing, setIsEditing] = useState(false)
   const [editingRecord, setEditingRecord] = useState<string | null>(null)
   const { toast } = useToast()
+  const [allRecords, setAllRecords] = useState<Record[]>([])
 
   const {
     register,
@@ -51,17 +60,59 @@ export default function AddRecordPage() {
     },
   })
 
-  const onSubmit = (data: RecordFormValues) => {
-    addRecord(data)
-    toast({
-      title: "Registro adicionado",
-      description: `Doação de R$ ${data.amount.toFixed(2)} registrada com sucesso.`,
-    })
-    reset()
-  }
+  const onSubmit = async (data: RecordFormValues) => {
+    if (user && token) {
+      const dataAll = { ...data, churchId: user.churchId };
+
+      try {
+        // Envia os dados para a API
+        const resp = await api.post("/records", dataAll, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("Novo registro:", resp.data);
+        fetchRecords();
+        toast({
+          title: "Registro adicionado",
+          description: `Doação de R$ ${data.amount.toFixed(2)} registrada com sucesso.`,
+        });
+      } catch (error) {
+        console.error("Erro ao adicionar registro:", error);
+      }
+
+      reset();
+    }
+  };
+
+    const updatedRecord = async (id: string, data: RecordFormValues) => {
+    if (user && token) {
+      const dataAll = { ...data, churchId: user.churchId };
+
+      try {
+        // Envia os dados para a API
+        const resp = await api.patch(`/records/${id}`, dataAll, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("Record edited:", resp.data);
+        fetchRecords();
+        toast({
+          title: "Record edited",
+          description: ` registrada com sucesso.`,
+        });
+      } catch (error) {
+        console.error("Erro ao adicionar registro:", error);
+      }
+    }
+  };
 
   const handleEdit = (id: string) => {
-    const record = records.find((r) => r.id === id)
+    const record = allRecords.find((r) => r.id === id)
+    console.log("Registro encontrado:", record)
     if (record) {
       setValue("serviceDescription", record.serviceDescription)
       setValue("countedBy", record.countedBy)
@@ -75,7 +126,7 @@ export default function AddRecordPage() {
   }
 
   const handleUpdate = (id: string, data: RecordFormValues) => {
-    updateRecord(id, data)
+    updatedRecord(id, data)
     setIsEditing(false)
     setEditingRecord(null)
     toast({
@@ -85,11 +136,47 @@ export default function AddRecordPage() {
   }
 
   const handleDelete = (id: string) => {
-    deleteRecord(id)
+    deletedRecord(id)
+    console.log("Registro excluído:", id)
     toast({
       title: "Registro excluído",
       description: "Doação excluída com sucesso.",
     })
+  }
+
+  const deletedRecord = async (id: string) => {
+    if (token) {
+      try {
+        const response = await api.delete(`/records/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        fetchRecords();
+      } catch (error) {
+        console.error("Erro ao buscar registros:", error);
+      }
+    }
+  }
+
+  useEffect(() => {
+      fetchRecords();
+  }, [])
+
+  const fetchRecords = async () => {
+    if (user && token) {
+      try {
+        const response = await api.get(`/records?churchId=${user.churchId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("Registros:", response.data);
+        setAllRecords(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar registros:", error);
+      }
+    }
   }
 
   return (
@@ -141,9 +228,9 @@ export default function AddRecordPage() {
                     <SelectValue placeholder="Selecione uma categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Tithe">Tithe</SelectItem>
+                    <SelectItem value="Tithes">Tithe</SelectItem>
                     <SelectItem value="Offering">Offer</SelectItem>
-                    <SelectItem value="Donation">Donation</SelectItem>
+                    <SelectItem value="Donations">Donation</SelectItem>
                     <SelectItem value="Other">Others</SelectItem>
                   </SelectContent>
                 </Select>
@@ -178,14 +265,14 @@ export default function AddRecordPage() {
         </CardContent>
       </Card>
 
-      <RecordsList records={records} onEdit={handleEdit} onDelete={handleDelete} />
+      <RecordsList records={allRecords} onEdit={handleEdit} onDelete={handleDelete} />
 
       {isEditing && editingRecord && (
         <EditRecordModal
           isOpen={isEditing}
           onClose={() => setIsEditing(false)}
           onSave={(data) => handleUpdate(editingRecord, data)}
-          defaultValues={records.find((r) => r.id === editingRecord) || undefined}
+          defaultValues={allRecords.find((r) => r.id === editingRecord) || undefined}
         />
       )}
     </div>

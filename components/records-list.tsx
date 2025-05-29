@@ -25,7 +25,7 @@ interface RecordsListProps {
 }
 
 export function RecordsList({ records, onEdit, onDelete }: RecordsListProps) {
-  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteId, setDeleteId] = useState<string>("")
 
   const confirmDelete = (id: string) => {
     setDeleteId(id)
@@ -34,17 +34,18 @@ export function RecordsList({ records, onEdit, onDelete }: RecordsListProps) {
   const handleDelete = () => {
     if (deleteId) {
       onDelete(deleteId)
-      setDeleteId(null)
+      setDeleteId("")
+      console.log("Deleting record with ID:", deleteId)
     }
   }
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
-      case "Tithe":
+      case "Tithes":
         return "Tithe"
       case "Offering":
         return "Offering"
-      case "Donation":
+      case "Donations":
         return "Donation"
       case "Other":
         return "Other"
@@ -100,7 +101,11 @@ export function RecordsList({ records, onEdit, onDelete }: RecordsListProps) {
                 <TableBody>
                   {records.map((record) => (
                     <TableRow key={record.id}>
-                      <TableCell>{format(new Date(record.date), "yyyy/MM/dd")}</TableCell>
+                      <TableCell>
+                        {record.createdAt
+                          ? format(new Date(record.createdAt), "yyyy/MM/dd")
+                          : ""}
+                      </TableCell>
                       <TableCell>{record.serviceDescription}</TableCell>
                       <TableCell>{record.name}</TableCell>
                       <TableCell>{getCategoryLabel(record.category)}</TableCell>
@@ -125,7 +130,7 @@ export function RecordsList({ records, onEdit, onDelete }: RecordsListProps) {
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId("")}>
         <AlertDialogContent className="text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm deletion</AlertDialogTitle>
