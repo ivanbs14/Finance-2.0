@@ -1,15 +1,59 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/lib/auth-context"
 import { useStore } from "@/lib/store-context"
+import api from "@/services/apiService"
+import { useEffect, useState } from "react"
+import Cookies from "js-cookie";
+import { Church } from "@/lib/data"
 
 interface DashboardContentProps {
-  pastorName: string
-  churchName: string
+  
 }
 
-export function DashboardContent({ pastorName, churchName }: DashboardContentProps) {
+const ChurchModel: Church = {
+  id: "",
+  name: "",
+  address: "",
+  phone: "",
+  email: "",
+  createdAt: "",
+}
+
+export function DashboardContent({ }: DashboardContentProps) {
+  const { user } = useAuth()
+  const token = Cookies.get('token');
   const { records, expenses, foreignDonations } = useStore()
+  const [church, setChurch] = useState<Church>(ChurchModel);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchData = async () => {
+      try {
+        const resp = await api.get(`/church/user/${user.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("User data:", resp.data);
+        setChurch(resp.data);
+/*         const [recordsData, expensesData, foreignData] = await Promise.all([
+          api.get(`/records?churchId=${user.churchId}`),
+          api.get(`/expenses?churchId=${user.churchId}`),
+          api.get(`/foreign-donations?churchId=${user.churchId}`)
+        ]);
+
+        records.setRecords(recordsData.data);
+        expenses.setExpenses(expensesData.data);
+        foreignDonations.setForeignDonations(foreignData.data); */
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+    fetchData();
+  }, [user]);
+
 
   const totalRecords = records.reduce((sum, record) => sum + record.amount, 0)
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
@@ -98,20 +142,20 @@ export function DashboardContent({ pastorName, churchName }: DashboardContentPro
           <CardContent>
             <div className="space-y-2 text-gray-300">
               <div className="flex justify-between">
-                <span className="font-medium">Name:</span>
-                <span>{churchName}</span>
+                <span className="font-medium">Name: </span> 
+                <span>{church.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-medium">Address:</span>
-                <span>Rua Exemplo, 123</span>
+                <span className="font-medium">Address: </span>
+                <span>{church.address}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-medium">Phone Number:</span>
-                <span>(11) 1234-5678</span>
+                <span className="font-medium">Phone Number: </span>
+                <span>{church.phone}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-medium">Email:</span>
-                <span>contato@igreja.com</span>
+                <span className="font-medium">Email: </span>
+                <span>{church.email}</span>
               </div>
             </div>
           </CardContent>

@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { users, type User } from "@/lib/data"
+import { UserRole, users, type User } from "@/lib/data"
 import api from "@/services/apiService"
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
@@ -9,10 +9,11 @@ import { jwtDecode } from "jwt-decode";
 interface DecodedToken {
   userId: string
   email: string
-  role: string
+  role: UserRole
   churchId?: string
   iat: number
   exp: number
+  name: string
 }
 
 // Remover a senha do tipo User para o usuário autenticado
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const { token } = response.data;
+    console.log("Resposta do login:", response.data);
     if (token) {
       Cookies.set("token", token, { expires: 1 });
 
@@ -65,12 +67,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: decoded.email,
         role: decoded.role,
         churchId: decoded.churchId,
+        name: decoded.name
       };
 
       setUser(userWithoutPassword);
       localStorage.setItem("user", JSON.stringify(userWithoutPassword));
       setIsLoading(false);
-      return true;
+      return token;
     }
 
     return false;
@@ -83,7 +86,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 };
 
-  // Função de logout
   const logout = () => {
     setUser(null)
     localStorage.removeItem("user")
@@ -92,7 +94,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={{ user, isLoading, login, logout }}>{children}</AuthContext.Provider>
 }
 
-// Hook personalizado para usar o contexto de autenticação
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {

@@ -6,12 +6,12 @@ import { useAuth } from "@/lib/auth-context"
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  console.log(user);
+  
   return (
     <div className="space-y-6">
-      <DashboardHeader title="Welcome!" description={user?.email || "Management System"} />
+      <DashboardHeader title="Welcome!" description={user?.name || "Management System"} />
 
-      <DashboardContent pastorName={user?.name || "Shepherd"} churchName={user?.churchName || "Example church"} />
+      <DashboardContent />
     </div>
   )
 }

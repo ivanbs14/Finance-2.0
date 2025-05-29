@@ -12,7 +12,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/components/ui/use-toast"
 import { AlertCircle } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
-import Cookies from "js-cookie";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -55,7 +54,6 @@ export function LoginForm() {
         return
       }
 
-      Cookies.set("token", String(token), { expires: 1 })
       toast({
         title: "Login bem-sucedido",
         description: "Redirecionando para o dashboard...",
