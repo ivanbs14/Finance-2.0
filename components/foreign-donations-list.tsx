@@ -100,7 +100,11 @@ export function ForeignDonationsList({ donations, onEdit, onDelete }: ForeignDon
                 <TableBody>
                   {donations.map((donation) => (
                     <TableRow key={donation.id}>
-                      <TableCell>{format(new Date(donation.date), "yyyy/MM/dd")}</TableCell>
+                                            <TableCell>
+                        {donation.createdAt
+                          ? format(new Date(donation.createdAt), "yyyy/MM/dd")
+                          : ""}
+                      </TableCell>
                       <TableCell>{donation.name}</TableCell>
                       <TableCell>{donation.currency}</TableCell>
                       <TableCell>{getPaymentMethodLabel(donation.paymentMethod)}</TableCell>

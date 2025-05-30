@@ -30,7 +30,7 @@ export interface ForeignDonation {
   currency: Currency
   paymentMethod: PaymentMethod
   description: string
-  date: string
+  createdAt?: Date
 }
 
 // Dados de exemplo para registros de doações

@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import Cookies from "js-cookie";
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -14,7 +16,8 @@ import { useToast } from "@/components/ui/use-toast"
 import { useStore, type Currency, type PaymentMethod } from "@/lib/store"
 import { ForeignDonationsList } from "@/components/foreign-donations-list"
 import { EditForeignDonationModal } from "@/components/edit-foreign-donation-modal"
-import { Expense } from "@/lib/data"
+import { Expense, ForeignDonation } from "@/lib/data"
+import api from "@/services/apiService";
 
 const foreignDonationSchema = z.object({
   name: z.string().min(1, { message: "Nome é obrigatório" }),
@@ -27,10 +30,13 @@ const foreignDonationSchema = z.object({
 type ForeignDonationFormValues = z.infer<typeof foreignDonationSchema>
 
 export default function AddForeignPage() {
+  const { user } = useAuth()
+  const token = Cookies.get('token');
   const { foreignDonations, addForeignDonation, updateForeignDonation, deleteForeignDonation } = useStore()
   const [isEditing, setIsEditing] = useState(false)
   const [editingDonation, setEditingDonation] = useState<string | null>(null)
   const { toast } = useToast()
+  const [allforeing, setAllForeign] = useState<ForeignDonation[]>([])
 
   const {
     register,
@@ -49,17 +55,57 @@ export default function AddForeignPage() {
     },
   })
 
-  const onSubmit = (data: ForeignDonationFormValues) => {
-    addForeignDonation(data)
-    toast({
-      title: "Doação estrangeira adicionada",
-      description: `Doação de ${data.currency} ${data.amount.toFixed(2)} registrada com sucesso.`,
-    })
-    reset()
+  const onSubmit = async (data: ForeignDonationFormValues) => {
+    if (user && token) {
+      const dataAll = { ...data, churchId: user.churchId };
+
+      try {
+        // Envia os dados para a API
+        const resp = await api.post("/foreign", dataAll, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("Novo Doação:", resp.data);
+        fetchForeigns();
+        toast({
+          title: "Doação adicionado",
+          description: `Doação de R$ ${data.amount.toFixed(2)} registrada com sucesso.`,
+        });
+      } catch (error) {
+        console.error("Erro ao adicionar Doação:", error);
+      }
+
+      reset();
+    }
   }
 
+  const updatedForeign = async (id: string, data: ForeignDonationFormValues) => {
+    if (user && token) {
+      const dataAll = { ...data, churchId: user.churchId };
+
+      try {
+        const resp = await api.patch(`/foreign/${id}`, dataAll, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("Doação edited:", resp.data);
+        fetchForeigns();
+        toast({
+          title: "Doação edited",
+          description: ` registrada com sucesso.`,
+        });
+      } catch (error) {
+        console.error("Erro ao adicionar Doação:", error);
+      }
+    }
+  };
+
   const handleEdit = (id: string) => {
-    const donation = foreignDonations.find((d) => d.id === id)
+    const donation = allforeing.find((d) => d.id === id)
     if (donation) {
       setEditingDonation(id)
       setIsEditing(true)
@@ -67,21 +113,54 @@ export default function AddForeignPage() {
   }
 
   const handleUpdate = (id: string, data: ForeignDonationFormValues) => {
-    updateForeignDonation(id, data)
+    updatedForeign(id, data)
     setIsEditing(false)
     setEditingDonation(null)
-    toast({
-      title: "Doação estrangeira atualizada",
-      description: "Doação atualizada com sucesso.",
-    })
+
   }
 
   const handleDelete = (id: string) => {
-    deleteForeignDonation(id)
-    toast({
-      title: "Doação estrangeira excluída",
-      description: "Doação excluída com sucesso.",
-    })
+    deletedForeign(id)
+
+  }
+
+  const deletedForeign = async (id: string) => {
+    if (token) {
+      try {
+        const response = await api.delete(`/foreign/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        fetchForeigns();
+        toast({
+          title: "Doação estrangeira excluída",
+          description: "Doação excluída com sucesso.",
+        })
+      } catch (error) {
+        console.error("Erro ao deletar registros:", error);
+      }
+    }
+  }
+
+  useEffect(() => {
+      fetchForeigns();
+  }, [])
+
+  const fetchForeigns = async () => {
+    if (user && token) {
+      try {
+        const response = await api.get(`/foreign?churchId=${user.churchId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("Doação:", response.data);
+        setAllForeign(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar Doação:", error);
+      }
+    }
   }
 
   return (
@@ -166,14 +245,14 @@ export default function AddForeignPage() {
         </CardContent>
       </Card>
 
-      <ForeignDonationsList donations={foreignDonations} onEdit={handleEdit} onDelete={handleDelete} />
+      <ForeignDonationsList donations={allforeing} onEdit={handleEdit} onDelete={handleDelete} />
 
       {isEditing && editingDonation && (
         <EditForeignDonationModal
           isOpen={isEditing}
           onClose={() => setIsEditing(false)}
           onSave={(data) => handleUpdate(editingDonation, data)}
-          defaultValues={foreignDonations.find((d) => d.id === editingDonation) || undefined}
+          defaultValues={allforeing.find((d) => d.id === editingDonation) || undefined}
         />
       )}
     </div>
