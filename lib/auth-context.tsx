@@ -3,8 +3,8 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { UserRole, users, type User } from "@/lib/data"
 import api from "@/services/apiService"
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
+import Cookies from "js-cookie"
+import { jwtDecode } from "jwt-decode"
 
 interface DecodedToken {
   userId: string
@@ -16,7 +16,6 @@ interface DecodedToken {
   name: string
 }
 
-// Remover a senha do tipo User para o usuário autenticado
 type AuthenticatedUser = Omit<User, "password">
 
 interface AuthContextType {
@@ -34,64 +33,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user")
-    console.log(storedUser)
-    if (storedUser) {
+    const token = Cookies.get("token")
+
+    if (token) {
       try {
-        setUser(JSON.parse(storedUser))
+        const decoded = jwtDecode<DecodedToken>(token)
+        const isExpired = decoded.exp * 1000 < Date.now()
+
+        if (isExpired) {
+          logout()
+        } else if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        }
       } catch (error) {
-        console.error("Erro ao carregar usuário do localStorage:", error)
-        localStorage.removeItem("user")
+        console.error("Erro ao decodificar token:", error)
+        logout()
       }
+    } else {
+      logout()
     }
+
     setIsLoading(false)
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
-  try {
-    setIsLoading(true);
-    console.log("Tentando fazer login com:", email, password);
-    
-    const response = await api.post("/auth", {
-      email,
-      password,
-    });
+    try {
+      setIsLoading(true)
 
-    const { token } = response.data;
-    console.log("Resposta do login:", response.data);
-    if (token) {
-      Cookies.set("token", token, { expires: 1 });
+      const response = await api.post("/auth", { email, password })
+      const { token } = response.data
 
-      const decoded = jwtDecode<DecodedToken>(token);
-      const userWithoutPassword = {
-        id: decoded.userId,
-        email: decoded.email,
-        role: decoded.role,
-        churchId: decoded.churchId,
-        name: decoded.name
-      };
+      if (token) {
+        Cookies.set("token", token, { expires: 1 })
 
-      setUser(userWithoutPassword);
-      localStorage.setItem("user", JSON.stringify(userWithoutPassword));
-      setIsLoading(false);
-      return token;
+        const decoded = jwtDecode<DecodedToken>(token)
+        const userWithoutPassword = {
+          id: decoded.userId,
+          email: decoded.email,
+          role: decoded.role,
+          churchId: decoded.churchId,
+          name: decoded.name,
+        }
+
+        setUser(userWithoutPassword)
+        localStorage.setItem("user", JSON.stringify(userWithoutPassword))
+        return true
+      }
+
+      return false
+    } catch (error) {
+      console.error("Erro ao fazer login:", error)
+      return false
+    } finally {
+      setIsLoading(false)
     }
-
-    return false;
-  } catch (error) {
-    console.error("Erro ao fazer login:", error);
-    setIsLoading(false);
-    return false;
-  } finally {
-    setIsLoading(false);
   }
-};
 
   const logout = () => {
     setUser(null)
     localStorage.removeItem("user")
+    Cookies.remove("token")
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, login, logout }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

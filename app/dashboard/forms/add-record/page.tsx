@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Cookies from "js-cookie";
+import { Record } from "@/lib/store"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -17,8 +19,6 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import type { Category, PaymentMethod } from "@/lib/data"
 import { useAuth } from "@/lib/auth-context"
 import api from "@/services/apiService"
-import Cookies from "js-cookie";
-import { Record } from "@/lib/store"
 import { set } from "date-fns"
 
 const recordSchema = z.object({
@@ -86,7 +86,7 @@ export default function AddRecordPage() {
     }
   };
 
-    const updatedRecord = async (id: string, data: RecordFormValues) => {
+  const updatedRecord = async (id: string, data: RecordFormValues) => {
     if (user && token) {
       const dataAll = { ...data, churchId: user.churchId };
 
@@ -154,7 +154,7 @@ export default function AddRecordPage() {
         });
         fetchRecords();
       } catch (error) {
-        console.error("Erro ao buscar registros:", error);
+        console.error("Erro ao deletar registros:", error);
       }
     }
   }

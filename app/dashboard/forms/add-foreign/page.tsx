@@ -14,6 +14,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useStore, type Currency, type PaymentMethod } from "@/lib/store"
 import { ForeignDonationsList } from "@/components/foreign-donations-list"
 import { EditForeignDonationModal } from "@/components/edit-foreign-donation-modal"
+import { Expense } from "@/lib/data"
 
 const foreignDonationSchema = z.object({
   name: z.string().min(1, { message: "Nome é obrigatório" }),

@@ -20,7 +20,7 @@ export interface Expense {
   id: string
   serviceDescription: string
   amount: number
-  date: string
+  createdAt?: Date
 }
 
 export interface ForeignDonation {

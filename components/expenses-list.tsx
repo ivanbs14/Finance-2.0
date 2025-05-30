@@ -65,7 +65,11 @@ export function ExpensesList({ expenses, onEdit, onDelete }: ExpensesListProps) 
                 <TableBody>
                   {expenses.map((expense) => (
                     <TableRow key={expense.id}>
-                      <TableCell>{format(new Date(expense.date), "yyyy/MM/dd")}</TableCell>
+                      <TableCell>
+                        {expense.createdAt
+                          ? format(new Date(expense.createdAt), "yyyy/MM/dd")
+                          : ""}
+                      </TableCell>
                       <TableCell>{expense.serviceDescription}</TableCell>
                       <TableCell className="text-right">{expense.amount.toFixed(2)}</TableCell>
                       <TableCell className="text-right">
