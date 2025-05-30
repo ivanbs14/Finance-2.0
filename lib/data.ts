@@ -18,7 +18,8 @@ export interface User {
   email: string
   password: string // Em produção, nunca armazene senhas em texto puro
   role: UserRole
-  churchId?: string
+  churchId?: string,
+  churchName?: string
 }
 
 export interface Church {

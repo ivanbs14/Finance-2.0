@@ -2,7 +2,9 @@
 
 import { DialogFooter } from "@/components/ui/dialog"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import Cookies from "js-cookie";
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -27,7 +29,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { UserRole } from "@/lib/data"
+import type { Church, User, UserRole } from "@/lib/data"
+import api from "@/services/apiService";
 
 const userSchema = z.object({
   name: z.string().min(1, { message: "Nome é obrigatório" }),
@@ -35,18 +38,22 @@ const userSchema = z.object({
   password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
   role: z.enum(["shepherd", "tesoureiro", "admin"]),
   churchId: z.string().min(1, { message: "Igreja é obrigatória" }),
+  churchName: z.string().min(1, { message: "Nome é obrigatório" }),
 })
 
 type UserFormValues = z.infer<typeof userSchema>
 
 export default function UsersPage() {
+  const { user } = useAuth()
+  const token = Cookies.get('token');
   const { users, churches, addUser, updateUser, deleteUser } = useStore()
   const [isAddingUser, setIsAddingUser] = useState(false)
   const [isEditingUser, setIsEditingUser] = useState(false)
   const [editingUserId, setEditingUserId] = useState<string | null>(null)
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
   const { toast } = useToast()
-
+  const [AllUsers, setAllUsers] = useState<User[]>([]);
+  const [AllChurchs, setAllChurchs] = useState<Church[]>([]);
   const {
     register,
     handleSubmit,
@@ -61,27 +68,58 @@ export default function UsersPage() {
       password: "",
       role: "tesoureiro",
       churchId: "",
+      churchName: "",
     },
   })
 
-  const onSubmit = (data: UserFormValues) => {
+  const onSubmit = async (data: UserFormValues) => {
     // Encontrar o nome da igreja
     const church = churches.find((c) => c.id === data.churchId)
     const churchName = church ? church.name : "Igreja Desconhecida"
 
     // Adicionar usuário com o nome da igreja
-    addUser({
+    /* addUser({
       ...data,
       churchName,
-    })
+    }) */
 
-    toast({
+    if (user && token) {
+      const dataAll = {
+        ...data,
+      }
+
+      console.log("Dados do usuário:", dataAll)
+
+      try {
+        // Envia os dados para a API
+        const resp = await api.post("/user", dataAll, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("Novo registro:", resp.data);
+        /* fetchRecords(); */
+        toast({
+          title: "Registro adicionado",
+          description: `registrad0 com sucesso.`,
+        });
+        fetchUsers();
+      } catch (error) {
+        console.error("Erro ao adicionar registro:", error);
+      }
+
+      setIsAddingUser(false)
+      reset()
+    }
+
+    /* toast({
       title: "Usuário adicionado",
       description: `${data.name} foi adicionado com sucesso.`,
     })
 
     setIsAddingUser(false)
-    reset()
+    reset() */
   }
 
   const handleEdit = (id: string) => {
@@ -126,12 +164,65 @@ export default function UsersPage() {
 
   const handleDelete = () => {
     if (deletingUserId) {
-      deleteUser(deletingUserId)
-      toast({
-        title: "Usuário excluído",
-        description: "Usuário foi excluído com sucesso.",
-      })
+      deletedRecord(deletingUserId)
+
       setDeletingUserId(null)
+    }
+  }
+
+    const deletedRecord = async (id: string) => {
+    if (token) {
+      try {
+        const response = await api.delete(`/user/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        fetchUsers();
+        toast({
+          title: "Usuário excluído",
+          description: "Usuário foi excluído com sucesso.",
+        })
+      } catch (error) {
+        console.error("Erro ao deletar registros:", error);
+      }
+    }
+  }
+
+  useEffect(() => {
+      fetchUsers();
+      fetchChurchs();
+  }, [])
+
+  const fetchUsers = async () => {
+    if (user && token) {
+      try {
+        const response = await api.get(`/user`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("Registros:", response.data);
+        setAllUsers(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar registros:", error);
+      }
+    }
+  }
+
+  const fetchChurchs = async () => {
+    if (user && token) {
+      try {
+        const response = await api.get(`/church`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("Registros:", response.data);
+        setAllChurchs(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar registros:", error);
+      }
     }
   }
 
@@ -171,7 +262,7 @@ export default function UsersPage() {
           <CardDescription className="text-gray-400">List of all registered users</CardDescription>
         </CardHeader>
         <CardContent>
-          {users.length === 0 ? (
+          {AllUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <p className="text-gray-400">No users found</p>
               <p className="text-sm text-gray-500">Click on "Add User" to register a new user</p>
@@ -189,7 +280,7 @@ export default function UsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {AllUsers.map((user) => (
                     <TableRow key={user.id} className="border-gray-600">
                       <TableCell className="text-white">{user.name}</TableCell>
                       <TableCell className="text-white">{user.email}</TableCell>
@@ -302,13 +393,24 @@ export default function UsersPage() {
               <Label htmlFor="churchId" className="text-gray-300">
                 Church
               </Label>
-              <Select defaultValue="" onValueChange={(value) => setValue("churchId", value)}>
+              <Select
+                defaultValue=""
+                onValueChange={(value) => {
+                  const selectedChurch = AllChurchs.find((church) => church.id === value);
+                  setValue("churchId", value);
+                  setValue("churchName", selectedChurch?.name ?? "");
+                }}
+              >
                 <SelectTrigger className="border-gray-600 bg-secondary focus:border-white text-white">
                   <SelectValue placeholder="Select a church" />
                 </SelectTrigger>
                 <SelectContent className="bg-cathedral-card border-gray-600">
-                  {churches.map((church) => (
-                    <SelectItem key={church.id} value={church.id} className="text-white hover:bg-primary-700/50">
+                  {AllChurchs.map((church) => (
+                    <SelectItem
+                      key={church.id}
+                      value={church.id}
+                      className="text-white hover:bg-primary-700/50"
+                    >
                       {church.name}
                     </SelectItem>
                   ))}
@@ -413,7 +515,7 @@ export default function UsersPage() {
                   <SelectValue placeholder="Select Church" />
                 </SelectTrigger>
                 <SelectContent className="bg-cathedral-card border-gray-600">
-                  {churches.map((church) => (
+                  {AllChurchs.map((church) => (
                     <SelectItem key={church.id} value={church.id} className="text-white hover:bg-primary-700/50">
                       {church.name}
                     </SelectItem>

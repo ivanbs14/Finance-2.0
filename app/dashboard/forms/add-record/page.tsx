@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import api from "@/services/apiService"
+import { useAuth } from "@/lib/auth-context"
 import Cookies from "js-cookie";
 import { Record } from "@/lib/store"
 import { z } from "zod"
@@ -17,8 +19,6 @@ import { RecordsList } from "@/components/records-list"
 import { EditRecordModal } from "@/components/edit-record-modal"
 import { DashboardHeader } from "@/components/dashboard-header"
 import type { Category, PaymentMethod } from "@/lib/data"
-import { useAuth } from "@/lib/auth-context"
-import api from "@/services/apiService"
 import { set } from "date-fns"
 
 const recordSchema = z.object({
