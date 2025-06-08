@@ -60,6 +60,7 @@ export default function UsersPage() {
     reset,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -73,9 +74,6 @@ export default function UsersPage() {
   })
 
   const onSubmit = async (data: UserFormValues) => {
-/*     const church = churches.find((c) => c.id === data.churchId)
-    const churchName = church ? church.name : "Igreja Desconhecida" */
-
     if (user && token) {
       const dataAll = {
         ...data,
@@ -99,24 +97,18 @@ export default function UsersPage() {
       setIsAddingUser(false)
       reset()
     }
-
-    /* toast({
-      title: "Usuário adicionado",
-      description: `${data.name} foi adicionado com sucesso.`,
-    })
-
-    setIsAddingUser(false)
-    reset() */
-  }
+  };
 
   const handleEdit = (id: string) => {
-    const user = users.find((u) => u.id === id)
+    const user = AllUsers.find((u) => u.id === id)
+    console.log("Found user:", user);
     if (user) {
       setValue("name", user.name)
       setValue("email", user.email)
       setValue("password", user.password) // Em produção, não faça isso
       setValue("role", user.role)
       setValue("churchId", user.churchId || "")
+      setValue("churchName", user.churchName || "")
       setEditingUserId(id)
       setIsEditingUser(true)
     }
@@ -124,26 +116,35 @@ export default function UsersPage() {
 
   const handleUpdate = (data: UserFormValues) => {
     if (editingUserId) {
-      // Encontrar o nome da igreja
-      const church = churches.find((c) => c.id === data.churchId)
-      const churchName = church ? church.name : "Igreja Desconhecida"
-
-      // Atualizar usuário com o nome da igreja
-      updateUser(editingUserId, {
-        ...data,
-        churchName,
-      })
-
-      toast({
-        title: "Usuário atualizado",
-        description: `${data.name} foi atualizado com sucesso.`,
-      })
-
+      updatedUser(editingUserId, data);
       setIsEditingUser(false)
       setEditingUserId(null)
       reset()
     }
   }
+
+  const updatedUser = async (id: string, data: UserFormValues) => {
+    if (user && token) {
+      const dataAll = { ...data, churchId: user.churchId };
+
+      try {
+        const resp = await api.patch(`/user/${id}`, dataAll, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("User edited:", resp.data);
+        fetchUsers();
+        toast({
+          title: "User edited",
+          description: ` registrada com sucesso.`,
+        });
+      } catch (error) {
+        console.error("Erro ao adicionar User:", error);
+      }
+    }
+  };
 
   const confirmDelete = (id: string) => {
     setDeletingUserId(id)
@@ -157,7 +158,7 @@ export default function UsersPage() {
     }
   }
 
-    const deletedRecord = async (id: string) => {
+  const deletedRecord = async (id: string) => {
     if (token) {
       try {
         const response = await api.delete(`/user/${id}`, {
@@ -456,7 +457,7 @@ export default function UsersPage() {
               {errors.email && <p className="text-sm text-white">{errors.email.message}</p>}
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="edit-password" className="text-gray-300">
                 Senha
               </Label>
@@ -468,13 +469,13 @@ export default function UsersPage() {
                 className="border-gray-600 bg-secondary focus:border-white text-white"
               />
               {errors.password && <p className="text-sm text-white">{errors.password.message}</p>}
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <Label htmlFor="edit-role" className="text-gray-300">
                 Function
               </Label>
-              <Select defaultValue="tesoureiro" onValueChange={(value) => setValue("role", value as UserRole)}>
+              <Select defaultValue={watch("role")} onValueChange={(value) => setValue("role", value as UserRole)}>
                 <SelectTrigger className="border-gray-600 bg-secondary focus:border-white text-white">
                   <SelectValue placeholder="Selecione uma função" />
                 </SelectTrigger>
@@ -497,19 +498,32 @@ export default function UsersPage() {
               <Label htmlFor="edit-churchId" className="text-gray-300">
                 Church
               </Label>
-              <Select defaultValue="" onValueChange={(value) => setValue("churchId", value)}>
+              <Select
+                value={watch("churchId")}
+                onValueChange={(value) => {
+                  const selectedChurch = AllChurchs.find((church) => church.id === value)
+                  setValue("churchId", value)
+                  setValue("churchName", selectedChurch?.name || "")
+                }}
+              >
                 <SelectTrigger className="border-gray-600 bg-secondary focus:border-gray text-white">
                   <SelectValue placeholder="Select Church" />
                 </SelectTrigger>
                 <SelectContent className="bg-cathedral-card border-gray-600">
                   {AllChurchs.map((church) => (
-                    <SelectItem key={church.id} value={church.id} className="text-white hover:bg-primary-700/50">
+                    <SelectItem
+                      key={church.id}
+                      value={church.id}
+                      className="text-white hover:bg-primary-700/50"
+                    >
                       {church.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.churchId && <p className="text-sm text-white">{errors.churchId.message}</p>}
+              {errors.churchId && (
+                <p className="text-sm text-white">{errors.churchId.message}</p>
+              )}
             </div>
 
             <DialogFooter>
