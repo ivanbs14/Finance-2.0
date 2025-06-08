@@ -37,12 +37,12 @@ export function DateRangePicker({
     setDate(value)
   }, [value])
 
-  function handleSelect(range: DateRange | undefined) {
-    if (range?.from && range.to) {
-      setDate(range)
-      onChange({ from: range.from, to: range.to })
-    }
-  }
+function handleSelect(selectedDate: Date | undefined) {
+  if (selectedDate) {
+    setDate({ from: selectedDate, to: selectedDate })
+    onChange({ from: selectedDate, to: selectedDate })
+  };
+}
 
   return (
     <div className={cn("grid gap-2", className)}>
@@ -52,7 +52,7 @@ export function DateRangePicker({
             id="date"
             variant={"default"}
             className={cn(
-              "w-[300px] justify-start text-left font-normal border-2 rounded-md",
+              "max-w-[300px] justify-start text-left font-normal border-2 rounded-md",
               !value && "text-muted-foreground"
             )}
           >
@@ -60,8 +60,7 @@ export function DateRangePicker({
             {value?.from ? (
               value.to ? (
                 <>
-                  {format(value.from, "LLL dd, y")} -{" "}
-                  {format(value.to, "LLL dd, y")}
+                  {format(value.from, "LLL dd, y")}
                 </>
               ) : (
                 format(value.from, "LLL dd, y")
@@ -73,10 +72,10 @@ export function DateRangePicker({
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
-            mode="range"
-            selected={value}
+            mode="single"
+            selected={value.from}
             onSelect={handleSelect}
-            numberOfMonths={2}
+            numberOfMonths={1}
             defaultMonth={value.from}
             initialFocus
           />
