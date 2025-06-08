@@ -121,7 +121,6 @@ export default function AddForeignPage() {
 
   const handleDelete = (id: string) => {
     deletedForeign(id)
-
   }
 
   const deletedForeign = async (id: string) => {

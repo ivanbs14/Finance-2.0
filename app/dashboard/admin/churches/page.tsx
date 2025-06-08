@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import Cookies from "js-cookie";
+import { useAuth } from "@/lib/auth-context"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -32,6 +34,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import api from "@/services/apiService"
+import { Church } from "@/lib/data";
 
 const churchSchema = z.object({
   name: z.string().min(1, { message: "Nome é obrigatório" }),
@@ -43,11 +47,14 @@ const churchSchema = z.object({
 type ChurchFormValues = z.infer<typeof churchSchema>
 
 export default function ChurchesPage() {
+  const { user } = useAuth()
+  const token = Cookies.get('token');
   const { churches, addChurch, updateChurch, deleteChurch } = useStore()
   const [isAddingChurch, setIsAddingChurch] = useState(false)
   const [isEditingChurch, setIsEditingChurch] = useState(false)
   const [editingChurchId, setEditingChurchId] = useState<string | null>(null)
   const [deletingChurchId, setDeletingChurchId] = useState<string | null>(null)
+  const [AllChurchs, setAllChurchs] = useState<Church[]>([]);
   const { toast } = useToast()
 
   const {
@@ -66,18 +73,34 @@ export default function ChurchesPage() {
     },
   })
 
-  const onSubmit = (data: ChurchFormValues) => {
-    addChurch(data)
-    toast({
-      title: "Igreja adicionada",
-      description: `${data.name} foi adicionada com sucesso.`,
-    })
-    setIsAddingChurch(false)
-    reset()
+  const onSubmit = async (data: ChurchFormValues) => {
+    if (user && token) {
+      const dataAll = {
+        ...data,
+      }
+      try {
+        const resp = await api.post("/church", dataAll, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        toast({
+          title: "Registro adicionado",
+          description: `registrado com sucesso.`,
+        });
+        fetchChurchs();
+      } catch (error) {
+        console.error("Erro ao adicionar registro:", error);
+      }
+
+      setIsAddingChurch(false)
+      reset()
+    }
   }
 
   const handleEdit = (id: string) => {
-    const church = churches.find((c) => c.id === id)
+    const church = AllChurchs.find((c) => c.id === id)
     if (church) {
       setValue("name", church.name)
       setValue("address", church.address)
@@ -90,16 +113,32 @@ export default function ChurchesPage() {
 
   const handleUpdate = (data: ChurchFormValues) => {
     if (editingChurchId) {
-      updateChurch(editingChurchId, data)
-      toast({
-        title: "Igreja atualizada",
-        description: `${data.name} foi atualizada com sucesso.`,
-      })
+      updatedChurch(editingChurchId, data);
       setIsEditingChurch(false)
       setEditingChurchId(null)
       reset()
     }
   }
+
+    const updatedChurch = async (id: string, data: ChurchFormValues) => {
+    if (user && token) {
+      try {
+        const resp = await api.patch(`/church/${id}`, data, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        fetchChurchs();
+        toast({
+          title: "Doação edited",
+          description: ` registrada com sucesso.`,
+        });
+      } catch (error) {
+        console.error("Erro ao adicionar Doação:", error);
+      }
+    }
+  };
 
   const confirmDelete = (id: string) => {
     setDeletingChurchId(id)
@@ -107,12 +146,47 @@ export default function ChurchesPage() {
 
   const handleDelete = () => {
     if (deletingChurchId) {
-      deleteChurch(deletingChurchId)
-      toast({
-        title: "Igreja excluída",
-        description: "Igreja foi excluída com sucesso.",
-      })
-      setDeletingChurchId(null)
+      deletedChurch(deletingChurchId);
+    }
+  }
+
+  const deletedChurch = async (id: string) => {
+    if (token) {
+      try {
+        const response = await api.delete(`/church/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        fetchChurchs();
+        setDeletingChurchId(null);
+        toast({
+          title: "Doação estrangeira excluída",
+          description: "Doação excluída com sucesso.",
+        })
+      } catch (error) {
+        console.error("Erro ao deletar registros:", error);
+      }
+    }
+  }
+
+  useEffect(() => {
+      fetchChurchs();
+  }, [])
+
+  const fetchChurchs = async () => {
+    if (user && token) {
+      try {
+        const response = await api.get(`/church`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("Registros:", response.data);
+        setAllChurchs(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar registros:", error);
+      }
     }
   }
 
@@ -139,7 +213,7 @@ export default function ChurchesPage() {
           <CardDescription className="text-gray-400">List of all registered churches</CardDescription>
         </CardHeader>
         <CardContent>
-          {churches.length === 0 ? (
+          {AllChurchs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <p className="text-gray-400">No church found</p>
               <p className="text-sm text-gray-500">Click on "Add Church" to register a new church</p>
@@ -158,7 +232,7 @@ export default function ChurchesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {churches.map((church) => (
+                  {AllChurchs.map((church) => (
                     <TableRow key={church.id} className="border-gray-600">
                       <TableCell className="text-white">{church.name}</TableCell>
                       <TableCell className="text-white">{church.address}</TableCell>

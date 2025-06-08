@@ -73,33 +73,20 @@ export default function UsersPage() {
   })
 
   const onSubmit = async (data: UserFormValues) => {
-    // Encontrar o nome da igreja
-    const church = churches.find((c) => c.id === data.churchId)
-    const churchName = church ? church.name : "Igreja Desconhecida"
-
-    // Adicionar usuário com o nome da igreja
-    /* addUser({
-      ...data,
-      churchName,
-    }) */
+/*     const church = churches.find((c) => c.id === data.churchId)
+    const churchName = church ? church.name : "Igreja Desconhecida" */
 
     if (user && token) {
       const dataAll = {
         ...data,
       }
 
-      console.log("Dados do usuário:", dataAll)
-
       try {
-        // Envia os dados para a API
         const resp = await api.post("/user", dataAll, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
-        console.log("Novo registro:", resp.data);
-        /* fetchRecords(); */
         toast({
           title: "Registro adicionado",
           description: `registrad0 com sucesso.`,
