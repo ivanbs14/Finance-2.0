@@ -18,6 +18,7 @@ yarn-error.log*
 
 # env files
 .env*
+nestjs_api_tutorial.md
 
 # vercel
 .vercel

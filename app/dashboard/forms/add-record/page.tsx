@@ -26,7 +26,7 @@ const recordSchema = z.object({
   countedBy: z.string().min(1, { message: "Nome de quem contou é obrigatório" }),
   name: z.string().min(1, { message: "Nome é obrigatório" }),
   amount: z.coerce.number().positive({ message: "Valor deve ser positivo" }),
-  category: z.enum(["Tithes", "Offering", "Donations", "Other"]),
+  category: z.enum(["Tithes", "Offerings", "Donations", "Other"]),
   paymentMethod: z.enum(["Cash", "Check", "Card", "Transfer", "Other"]),
   createdAt: z.string().optional(),
 })
@@ -55,7 +55,7 @@ export default function AddRecordPage() {
       countedBy: "",
       name: "",
       amount: undefined,
-      category: "Offering",
+      category: "Offerings",
       paymentMethod: "Cash",
     },
   })
@@ -72,14 +72,18 @@ export default function AddRecordPage() {
           },
         });
 
-        console.log("Novo registro:", resp.data);
         fetchRecords();
         toast({
           title: "Registro adicionado",
           description: `Doação de R$ ${data.amount.toFixed(2)} registrada com sucesso.`,
         });
       } catch (error) {
-        console.error("Erro ao adicionar registro:", error);
+        toast({
+          title: "Erro ao adicionar registro",
+          description: "Ocorreu um erro ao tentar adicionar o registro. Por favor, tente novamente.",
+          variant: "destructive",
+        });
+        return;
       }
 
       reset();
@@ -101,11 +105,15 @@ export default function AddRecordPage() {
         console.log("Record edited:", resp.data);
         fetchRecords();
         toast({
-          title: "Record edited",
-          description: ` registrada com sucesso.`,
+          title: "Registro editado",
+          description: `Registro editado com sucesso.`,
         });
       } catch (error) {
-        console.error("Erro ao adicionar registro:", error);
+        toast({
+          title: "Erro ao editar registro",
+          description: "Ocorreu um erro ao tentar editar o registro. Por favor, tente novamente.",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -137,11 +145,6 @@ export default function AddRecordPage() {
 
   const handleDelete = (id: string) => {
     deletedRecord(id)
-    console.log("Registro excluído:", id)
-    toast({
-      title: "Registro excluído",
-      description: "Doação excluída com sucesso.",
-    })
   }
 
   const deletedRecord = async (id: string) => {
@@ -152,9 +155,17 @@ export default function AddRecordPage() {
             Authorization: `Bearer ${token}`,
           },
         });
+        toast({
+          title: "Registro deletado",
+          description: "Registro deletado com sucesso.",
+        });
         fetchRecords();
       } catch (error) {
-        console.error("Erro ao deletar registros:", error);
+        toast({
+          title: "Erro ao deletar registro",
+          description: "Ocorreu um erro ao tentar deletar o registro. Por favor, tente novamente.",
+          variant: "destructive",
+        });
       }
     }
   }
@@ -171,7 +182,7 @@ export default function AddRecordPage() {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log("Registros:", response.data);
+        console.log("Registros: ", response.data);
         setAllRecords(response.data);
       } catch (error) {
         console.error("Erro ao buscar registros:", error);

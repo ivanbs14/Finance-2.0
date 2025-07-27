@@ -2,7 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
 export type PaymentMethod = "Cash" | "Check" | "Card" | "Transfer" | "Other"
-export type Category = "Tithes" | "Offering" | "Donations" | "Other"
+export type Category = "Tithes" | "Offerings" | "Donations" | "Other"
 export type Currency = "BRL" | "USD" | "EUR" | "GBP" | "Other"
 
 export interface Record {
@@ -43,7 +43,6 @@ const sampleRecords: Record[] = [
     amount: 150.0,
     category: "Tithes",
     paymentMethod: "Cash",
-    date: new Date(2025, 5, 15).toISOString(),
   },
   {
     id: "rec-2",
@@ -51,9 +50,8 @@ const sampleRecords: Record[] = [
     countedBy: "Pedro Santos",
     name: "Ana Souza",
     amount: 75.5,
-    category: "Offering",
+    category: "Offerings",
     paymentMethod: "Transfer",
-    date: new Date(2025, 5, 18).toISOString(),
   },
   {
     id: "rec-3",
@@ -61,9 +59,8 @@ const sampleRecords: Record[] = [
     countedBy: "Maria Oliveira",
     name: "Carlos Ferreira",
     amount: 200.0,
-    category: "Donation",
+    category: "Donations",
     paymentMethod: "Card",
-    date: new Date(2025, 5, 22).toISOString(),
   },
   {
     id: "rec-4",
@@ -71,9 +68,8 @@ const sampleRecords: Record[] = [
     countedBy: "Pedro Santos",
     name: "Mariana Costa",
     amount: 500.0,
-    category: "Donation",
+    category: "Donations",
     paymentMethod: "Check",
-    date: new Date(2025, 5, 25).toISOString(),
   },
   {
     id: "rec-5",
@@ -83,7 +79,6 @@ const sampleRecords: Record[] = [
     amount: 100.0,
     category: "Tithes",
     paymentMethod: "Cash",
-    date: new Date(2025, 5, 29).toISOString(),
   },
 ]
 
@@ -93,25 +88,21 @@ const sampleExpenses: Expense[] = [
     id: "exp-1",
     serviceDescription: "Conta de Luz",
     amount: 350.0,
-    date: new Date(2025, 5, 10).toISOString(),
   },
   {
     id: "exp-2",
     serviceDescription: "Conta de Água",
     amount: 120.0,
-    date: new Date(2025, 5, 12).toISOString(),
   },
   {
     id: "exp-3",
     serviceDescription: "Material de Limpeza",
     amount: 200.0,
-    date: new Date(2025, 5, 20).toISOString(),
   },
   {
     id: "exp-4",
     serviceDescription: "Manutenção do Ar Condicionado",
     amount: 450.0,
-    date: new Date(2025, 5, 22).toISOString(),
   },
 ]
 
@@ -124,7 +115,6 @@ const sampleForeignDonations: ForeignDonation[] = [
     currency: "USD",
     paymentMethod: "Transfer",
     description: "Doação para projeto social",
-    date: new Date(2025, 5, 15).toISOString(),
   },
   {
     id: "for-2",
@@ -133,7 +123,6 @@ const sampleForeignDonations: ForeignDonation[] = [
     currency: "EUR",
     paymentMethod: "Transfer",
     description: "Apoio para construção",
-    date: new Date(2025, 5, 25).toISOString(),
   },
 ]
 

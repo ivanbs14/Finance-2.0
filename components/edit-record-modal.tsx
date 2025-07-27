@@ -16,7 +16,7 @@ const recordSchema = z.object({
   countedBy: z.string().min(1, { message: "Nome de quem contou é obrigatório" }),
   name: z.string().min(1, { message: "Nome é obrigatório" }),
   amount: z.coerce.number().positive({ message: "Valor deve ser positivo" }),
-  category: z.enum(["Tithes", "Offering", "Donations", "Other"]),
+  category: z.enum(["Tithes", "Offerings", "Donations", "Other"]),
   paymentMethod: z.enum(["Cash", "Check", "Card", "Transfer", "Other"]),
   createdAt: z.string().optional(),
 })
@@ -44,7 +44,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, defaultValues }: Edit
       countedBy: "",
       name: "",
       amount: 0,
-      category: "Offering",
+      category: "Offerings",
       paymentMethod: "Cash",
       createdAt: new Date().toISOString(),
     },
@@ -118,9 +118,9 @@ export function EditRecordModal({ isOpen, onClose, onSave, defaultValues }: Edit
                   <SelectValue placeholder="Selection category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Tithes">Tithe</SelectItem>
-                  <SelectItem value="Offering">Offering</SelectItem>
-                  <SelectItem value="Donations">Donation</SelectItem>
+                  <SelectItem value="Tithes">Tithes</SelectItem>
+                  <SelectItem value="Offerings">Offerings</SelectItem>
+                  <SelectItem value="Donations">Donations</SelectItem>
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>

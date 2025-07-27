@@ -7,7 +7,7 @@
 
 // Tipos de dados
 export type PaymentMethod = "Cash" | "Check" | "Card" | "Transfer" | "Other"
-export type Category = "Tithes" | "Offering" | "Donations" | "Other"
+export type Category = "Tithes" | "Offerings" | "Donations" | "Other"
 export type Currency = "BRL" | "USD" | "EUR" | "GBP" | "Other"
 export type UserRole = "shepherd" | "tesoureiro" | "admin"
 
@@ -128,7 +128,7 @@ export const records: Record[] = [
     countedBy: "Pedro Santos",
     name: "Ana Souza",
     amount: 75.5,
-    category: "Offering",
+    category: "Offerings",
     paymentMethod: "Transfer",
     date: new Date(2025, 5, 18).toISOString(),
   },
@@ -138,7 +138,7 @@ export const records: Record[] = [
     countedBy: "Maria Oliveira",
     name: "Carlos Ferreira",
     amount: 200.0,
-    category: "Donation",
+    category: "Donations",
     paymentMethod: "Card",
     date: new Date(2025, 5, 22).toISOString(),
   },
@@ -148,7 +148,7 @@ export const records: Record[] = [
     countedBy: "Pedro Santos",
     name: "Mariana Costa",
     amount: 500.0,
-    category: "Donation",
+    category: "Donations",
     paymentMethod: "Check",
     date: new Date(2025, 5, 25).toISOString(),
   },
